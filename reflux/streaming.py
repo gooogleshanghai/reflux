@@ -1,4 +1,4 @@
-"""ReFlux-streaming (minimal): lagged depth-increment feedback, no routing.
+"""ReFlux-streaming (minimal):
 
 Two batched traversals over the input:
   record : plain forward; capture z_s(t) and z_d(t) at every position;
