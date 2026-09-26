@@ -44,22 +44,9 @@ backbone.*
 
 ### The write operator
 
-All schedules share one primitive --- an additive, norm-matched write into the
-target stream at depth $d$:
+All schedules share one primitive --- an additive, norm-matched write into the target stream at depth $d$:
 
-$$
-\tilde z_d
-=
-\mathrm{rescale}\!\left(
-\beta z_d + \alpha N_h(p)
-\right),
-\qquad
-N_h(p)
-=
-p \cdot
-\frac{\lVert z_d \rVert}
-{\lVert p \rVert + \varepsilon}.
-$$
+$$\tilde z_d = \mathrm{rescale}\!\left(\beta z_d + \alpha N_h(p)\right), \qquad N_h(p) = p \cdot \frac{\lVert z_d \rVert}{\lVert p \rVert + \varepsilon}.$$
 
 where `p` is the feedback payload and `rescale` restores the pre-write norm
 when `preserve_norm=True`. The two methods in this repository differ only in
