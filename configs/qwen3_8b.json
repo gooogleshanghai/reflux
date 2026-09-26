@@ -1,0 +1,6 @@
+{
+  "model": "Qwen/Qwen3-8B-Base",
+  "num_layers": 36,
+  "recirculation_v1": {"source": 26, "target": 13, "alpha": 0.07},
+  "reflux_streaming": {"source": 26, "target": 13, "alpha": 0.10, "beta": 0.9, "preserve_norm": true}
+}

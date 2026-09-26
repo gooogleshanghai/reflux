@@ -1,0 +1,6 @@
+{
+  "model": "google/gemma-3-1b-pt",
+  "num_layers": 26,
+  "recirculation_v1": {"source": 11, "target": 4, "alpha": 0.15},
+  "reflux_streaming": {"source": 11, "target": 4, "alpha": 0.20, "beta": 0.9, "preserve_norm": true}
+}
