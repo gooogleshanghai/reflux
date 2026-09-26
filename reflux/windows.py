@@ -1,7 +1,6 @@
 """Window construction for language-modeling evaluation.
 
-Default protocol (aligned with the v1 release of Recirculation): documents
-are tokenized without special tokens and partitioned into fixed-length
+Documents are tokenized without special tokens and partitioned into fixed-length
 windows; short corpora are cycled to fill the requested number of windows.
 An option prefixes each window with the tokenizer's BOS token when one
 exists (per-tokenizer convention).
