@@ -55,6 +55,7 @@ what they put in `p`:
 | schedule | payload `p` | β | norm restore | traversals | FLOPs |
 |---|---|---|---|---|---|
 | **Recirculation-v1** *(baseline reproduction)* | full state z_s | 1−α | ✗ | 2 (record → write) | 2× |
+| **ReFlux-sync** *(ours)* | same-token increment Δ(t) = z_s(t) − z_d(t) | 0.9 | ✓ | 2 (record → inject) | 2× |
 | **ReFlux-streaming** *(ours)* | lagged increment Δ(t−1) = z_s(t−1) − z_d(t−1) | 0.9 | ✓ | 2 (record → inject), then 1× at decode | **1×** |
 
 ### Streaming schedule
@@ -74,9 +75,10 @@ flowchart LR
 
 During autoregressive decoding only the **inject** path runs, one hook per
 token — which is why streaming lands at the base model's runtime. The
-synchronous schedule instead applies the *same-token* increment and trades
-one extra traversal for higher fidelity (≈2× FLOPs); its iterated variant is
-described in the paper.
+synchronous schedule (`ReFluxSync`, `--method reflux-sync`) instead applies
+the *same-token* increment and trades one extra traversal for higher fidelity
+(≈2× FLOPs); it takes the same `--source/--target/--alpha/--beta` as
+streaming, and its iterated variant is described in the paper.
 
 ## 📦 What's inside
 
@@ -85,6 +87,7 @@ reflux/            core library
 ├── write.py       feedback_write — the norm-matched additive write operator
 ├── hooks.py       Capture / Inject forward hooks, layer resolution, shift_prev
 ├── streaming.py   ReFluxStreaming — record→inject lagged-increment schedule
+├── sync.py        ReFluxSync — record→inject same-token schedule (2× FLOPs)
 ├── recirculation_v1.py  RecirculationV1 — baseline reproduction
 ├── windows.py     fixed-length sliding-window corpus batching
 ├── metrics.py     per-window perplexity
@@ -120,6 +123,11 @@ python scripts/eval_ppl.py --model google/gemma-3-1b-pt --method recirculation-v
 python scripts/eval_ppl.py --model google/gemma-3-1b-pt --method reflux-streaming \
     --source 11 --target 4 --alpha 0.20 --beta 0.9 \
     --corpus data/corpus_c4.txt --windows 64
+
+# 3. or the synchronous schedule: same edge/strength, ~2x FLOPs, higher fidelity
+python scripts/eval_ppl.py --model google/gemma-3-1b-pt --method reflux-sync \
+    --source 11 --target 4 --alpha 0.20 --beta 0.9 \
+    --corpus data/corpus_c4.txt --windows 64
 ```
 
 Useful flags: `--window` (tokens per window), `--batch-size`, `--device`,
@@ -136,7 +144,8 @@ CORPUS=data/corpus_c4.txt WINDOWS=64 ./scripts/run_paper_configs.sh
 ### Python API
 
 ```python
-from reflux import ReFluxStreaming, RecirculationV1, build_windows, load_model, window_ppl
+from reflux import (ReFluxStreaming, ReFluxSync, RecirculationV1,
+                    build_windows, load_model, window_ppl)
 
 tok, model = load_model("google/gemma-3-1b-pt")
 ids = build_windows(tok, open("data/corpus_c4.txt").read(), num_windows=8, window=1024)
@@ -145,6 +154,11 @@ method = ReFluxStreaming(model, source=11, target=4, alpha=0.2, beta=0.9,
                          preserve_norm=True)
 ppl = window_ppl(model, ids, num_windows=8, forward_fn=method.forward)
 method.remove()
+
+# synchronous variant: writes the same-token increment, ~2x FLOPs
+sync = ReFluxSync(model, source=11, target=4, alpha=0.2, beta=0.9)
+ppl_sync = window_ppl(model, ids, num_windows=8, forward_fn=sync.forward)
+sync.remove()
 ```
 
 

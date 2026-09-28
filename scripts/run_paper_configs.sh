@@ -33,4 +33,8 @@ PY
   python scripts/eval_ppl.py --model "$model" --method reflux-streaming \
     $rx --corpus "$CORPUS" --windows "$WINDOWS" --device "$DEV" \
     --output "results/sample/${name}_reflux_streaming.json"
+  echo "=== $name (reflux-sync) ==="
+  python scripts/eval_ppl.py --model "$model" --method reflux-sync \
+    $rx --corpus "$CORPUS" --windows "$WINDOWS" --device "$DEV" \
+    --output "results/sample/${name}_reflux_sync.json"
 done

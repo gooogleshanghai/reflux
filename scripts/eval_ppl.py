@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Perplexity evaluation for base / ReFlux-streaming / Recirculation-v1.
+"""Perplexity evaluation for base / ReFlux-streaming / ReFlux-sync / Recirculation-v1.
 
 Example:
     python scripts/eval_ppl.py --model google/gemma-3-1b-pt \
@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import torch  # noqa: E402
 
-from reflux import (ReFluxStreaming, RecirculationV1,  # noqa: E402
+from reflux import (ReFluxStreaming, ReFluxSync, RecirculationV1,  # noqa: E402
                         build_windows, load_model, window_ppl)
 
 
@@ -23,7 +23,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
     ap.add_argument("--method", default="base",
-                    choices=["base", "reflux-streaming", "recirculation-v1"])
+                    choices=["base", "reflux-streaming", "reflux-sync",
+                             "recirculation-v1"])
     ap.add_argument("--source", type=int, default=None)
     ap.add_argument("--target", type=int, default=None)
     ap.add_argument("--alpha", type=float, default=0.15)
@@ -50,11 +51,12 @@ def main():
     else:
         assert args.source is not None and args.target is not None, \
             "--source/--target required for feedback methods"
-        cls = ReFluxStreaming if args.method == "reflux-streaming" \
-            else RecirculationV1
+        cls = (ReFluxStreaming if args.method == "reflux-streaming"
+               else ReFluxSync if args.method == "reflux-sync"
+               else RecirculationV1)
         method = cls(model, args.source, args.target, alpha=args.alpha,
                      beta=args.beta) \
-            if args.method == "reflux-streaming" \
+            if args.method != "recirculation-v1" \
             else cls(model, args.source, args.target, alpha=args.alpha)
         ppl = window_ppl(model, ids, args.windows, args.window,
                          forward_fn=method.forward,
