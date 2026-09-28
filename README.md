@@ -58,21 +58,6 @@ what they put in `p`:
 | **ReFlux-sync** *(ours)* | same-token increment Δ(t) = z_s(t) − z_d(t) | 0.9 | ✓ | 2 (record → inject) | 2× |
 | **ReFlux-streaming** *(ours)* | lagged increment Δ(t−1) = z_s(t−1) − z_d(t−1) | 0.9 | ✓ | 2 (record → inject), then 1× at decode | **1×** |
 
-### Streaming schedule
-
-```mermaid
-flowchart LR
-    subgraph record["pass 1 — record"]
-    A["forward(ids)"] --> B["capture z_s(t), z_d(t)"]
-    B --> C["Δ(t) = z_s(t) − z_d(t)\nshift_prev: P(t) = Δ(t−1)"]
-    end
-    subgraph inject["pass 2 — inject"]
-    D["forward(ids)"] --> E["write at depth d:\nz̃_d(t) = β z_d(t) + α N(Δ(t−1))"]
-    E --> F["logits + KV cache\n(future tokens inherit feedback)"]
-    end
-    record --> inject
-```
-
 During autoregressive decoding only the **inject** path runs, one hook per
 token — which is why streaming lands at the base model's runtime. The
 synchronous schedule (`ReFluxSync`, `--method reflux-sync`) instead applies
@@ -130,10 +115,6 @@ python scripts/eval_ppl.py --model google/gemma-3-1b-pt --method reflux-sync \
     --corpus data/corpus_c4.txt --windows 64
 ```
 
-Useful flags: `--window` (tokens per window), `--batch-size`, `--device`,
-`--output` (JSON results), and `--bos auto` to prepend the tokenizer's BOS
-token to every window (protocol-sensitive models only; see the paper's
-discussion of windowing protocols).
 
 Or run every paper configuration in one shot:
 
